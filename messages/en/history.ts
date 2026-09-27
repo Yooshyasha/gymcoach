@@ -50,6 +50,7 @@ export const history = {
     heartRateChart: 'Heart rate over time',
     heartRate: 'HR',
     chartMinutes: '{value} min',
+    updateError: 'Could not update the set.',
   },
   delete: {
     button: 'Delete',

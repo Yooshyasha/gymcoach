@@ -17,6 +17,12 @@ export const coach = {
     applied: 'Применено',
     debriefFrom: 'Разбор от {date}',
     weekOf: 'Неделя от {date}',
+    deleteTitle: 'Удалить этот разбор?',
+    deleteDescription:
+      'Этот еженедельный разбор будет удалён безвозвратно. Уже применённые изменения в программе это не затронет.',
+    deleting: 'Удаление...',
+    deleted: 'Разбор удалён.',
+    deleteError: 'Не удалось удалить разбор.',
   },
   chat: {
     apiKey: 'Укажите {variable} в файле .env, чтобы включить чат.',

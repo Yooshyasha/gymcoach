@@ -33,6 +33,8 @@ export const programs = {
   createError: 'Impossible de créer le programme.',
   saveError: 'Impossible d’enregistrer le programme.',
   deleteError: 'Impossible de supprimer le programme.',
+  export: 'Exporter',
+  exportError: 'Impossible d’exporter le programme.',
   activated: 'Programme activé.',
   deactivated: 'Programme désactivé.',
   activate: 'Activer',

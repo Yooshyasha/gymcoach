@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/lib/prisma-client';
 import { ApiError, handleApiError, parseJsonBody, requireApiUserId } from '@/lib/api';
 import { findAchievingSet } from '@/lib/goals';
-import { setUpdateSchema } from '@/lib/schemas/set';
+import { setUpdateSchema, validateWeightForExercise } from '@/lib/schemas/set';
 import { effectiveWeight } from '@/lib/stats';
 
 interface Params {
@@ -25,18 +25,21 @@ export async function PATCH(req: Request, props: Params) {
       const set = await tx.set.findFirst({
         where: { id: params.id, session: { userId } },
         include: {
-          session: { select: { finishedAt: true } },
-          exercise: { select: { category: true } },
+          exercise: { select: { category: true, usesBodyweight: true } },
         },
       });
       if (!set) {
         throw new ApiError(404, 'Set not found.');
       }
-      if (set.session.finishedAt) {
-        throw new ApiError(400, 'Session already finished.');
-      }
+      // A finished session's sets stay editable (correcting a logged value
+      // after the fact, e.g. a mislabeled assisted-machine weight), matching
+      // DELETE below, which never gated on finishedAt either.
       if (set.exercise.category === 'CARDIO') {
         throw new ApiError(400, 'Cardio sets cannot be edited with strength fields.');
+      }
+      const weightError = validateWeightForExercise(set.exercise.usesBodyweight, data.weight);
+      if (weightError) {
+        throw new ApiError(400, weightError);
       }
 
       await lockExerciseGoal(tx, userId, set.exerciseId);

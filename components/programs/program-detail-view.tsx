@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ChevronLeft, Plus, Printer } from 'lucide-react';
+import { ChevronLeft, Download, Plus, Printer } from 'lucide-react';
 import type { Exercise, Program, ProgramExercise, Workout } from '@/lib/prisma-client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ export function ProgramDetailView({ program, catalog }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [addWorkoutOpen, setAddWorkoutOpen] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   async function toggleActive() {
     setActivating(true);
@@ -50,6 +51,38 @@ export function ProgramDetailView({ program, catalog }: Props) {
       router.refresh();
     } finally {
       setActivating(false);
+    }
+  }
+
+  // Downloads this one program (plus the exercises it references) as a
+  // backup-shaped JSON file: importable as-is into an empty account via
+  // Settings > Backup > Import, or merged by hand into an existing backup.
+  async function exportProgram() {
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/programs/${program.id}/export`);
+      if (!res.ok) {
+        toast.error(t('exportError'));
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const slug = program.name
+        .toLocaleLowerCase('en-US')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60);
+      a.download = `gymcoach-program-${slug || program.id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t('exportError'));
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -98,6 +131,16 @@ export function ProgramDetailView({ program, catalog }: Props) {
               <Printer className="size-4" />
               <span className="ml-2">{t('print.action')}</span>
             </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportProgram}
+            disabled={exporting}
+            className="min-h-tap"
+          >
+            <Download className="size-4" />
+            <span className="ml-2">{t('export')}</span>
           </Button>
           <ProgramDeleteButton programId={program.id} programName={trainingName(program.name)} />
         </CardContent>

@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { setInputSchema, setUpdateSchema, validateSetForCategory } from './set';
+import {
+  setInputSchema,
+  setUpdateSchema,
+  validateSetForCategory,
+  validateWeightForExercise,
+} from './set';
 
 describe('setInputSchema', () => {
   const valid = { exerciseId: 'ex1', setNumber: 1, weight: 60, reps: 10 };
@@ -32,10 +37,16 @@ describe('setInputSchema', () => {
 
   it('rejects out-of-range weight, reps, setNumber, and rir', () => {
     expect(setInputSchema.safeParse({ ...valid, weight: 501 }).success).toBe(false);
-    expect(setInputSchema.safeParse({ ...valid, weight: -1 }).success).toBe(false);
+    expect(setInputSchema.safeParse({ ...valid, weight: -501 }).success).toBe(false);
     expect(setInputSchema.safeParse({ ...valid, reps: 101 }).success).toBe(false);
     expect(setInputSchema.safeParse({ ...valid, setNumber: 0 }).success).toBe(false);
     expect(setInputSchema.safeParse({ ...valid, rir: 6 }).success).toBe(false);
+  });
+
+  it('allows negative weight at the schema level (assisted bodyweight movements)', () => {
+    // The bodyweight-only restriction is a cross-field rule, enforced by
+    // validateWeightForExercise below - the raw schema only bounds the range.
+    expect(setInputSchema.safeParse({ ...valid, weight: -64 }).success).toBe(true);
   });
 
   it('rejects non-integer reps and setNumber', () => {
@@ -114,5 +125,20 @@ describe('validateSetForCategory', () => {
   it('accepts a cardio set with a duration (distance optional)', () => {
     expect(validateSetForCategory('CARDIO', { durationSec: 750 })).toBeNull();
     expect(validateSetForCategory('CARDIO', { durationSec: 750, distanceM: 2500 })).toBeNull();
+  });
+});
+
+describe('validateWeightForExercise', () => {
+  it('accepts non-negative weight on any exercise', () => {
+    expect(validateWeightForExercise(false, 60)).toBeNull();
+    expect(validateWeightForExercise(true, 0)).toBeNull();
+  });
+
+  it('accepts negative weight (assistance) on a bodyweight exercise', () => {
+    expect(validateWeightForExercise(true, -64)).toBeNull();
+  });
+
+  it('rejects negative weight on a non-bodyweight exercise', () => {
+    expect(validateWeightForExercise(false, -20)).toMatch(/bodyweight/i);
   });
 });

@@ -53,6 +53,7 @@ export const history = {
     heartRateChart: 'Fréquence cardiaque dans le temps',
     heartRate: 'FC',
     chartMinutes: '{value} min',
+    updateError: 'Impossible de mettre à jour la série.',
   },
   delete: {
     button: 'Supprimer',

@@ -19,6 +19,7 @@ import {
 } from '@/lib/cardio';
 import { formatWeight } from '@/lib/units';
 import { DeleteSessionButton } from '@/components/history/delete-session-button';
+import { EditableStrengthTable } from '@/components/history/editable-strength-table';
 import { ActivityTrackChart } from '@/components/history/activity-track-chart';
 import { TrackDecoupling } from '@/components/history/track-decoupling';
 import { getExerciseDisplayName } from '@/i18n/exercise-names';
@@ -345,73 +346,22 @@ export default async function HistorySessionPage(props: Params) {
                           );
                         })}
                       {!isCardio && (
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
-                              <th className="py-1.5 font-medium">#</th>
-                              <th className="py-1.5 font-medium">{detail('load')}</th>
-                              <th className="py-1.5 font-medium">{detail('reps')}</th>
-                              <th className="py-1.5 font-medium">RIR</th>
-                              <th className="py-1.5 font-medium">{detail('type')}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {entry.sets.map((s) => {
-                              const isBw = entry.exercise.usesBodyweight && bodyweight;
-                              const effective = isBw ? bodyweight + s.weight : s.weight;
-                              return (
-                                <tr
-                                  key={s.id}
-                                  className={
-                                    s.isWarmup
-                                      ? 'text-muted-foreground'
-                                      : 'border-b border-border/40'
-                                  }
-                                >
-                                  <td className="py-1.5">{s.setNumber}</td>
-                                  <td className="py-1.5">
-                                    {isBw ? (
-                                      <span>
-                                        {formatWeight(effective, unit, {
-                                          decimals: 2,
-                                          group: false,
-                                          locale,
-                                        })}
-                                        <span className="ml-1 text-xs text-muted-foreground">
-                                          ({s.weight >= 0 ? '+' : ''}
-                                          {formatWeight(s.weight, unit, {
-                                            decimals: 2,
-                                            withUnit: false,
-                                            group: false,
-                                            locale,
-                                          })}{' '}
-                                          {detail('external')})
-                                        </span>
-                                      </span>
-                                    ) : effective === 0 ? (
-                                      detail('bodyweight')
-                                    ) : (
-                                      formatWeight(effective, unit, {
-                                        decimals: 2,
-                                        group: false,
-                                        locale,
-                                      })
-                                    )}
-                                  </td>
-                                  <td className="py-1.5">{s.reps}</td>
-                                  <td className="py-1.5">{s.rir ?? '-'}</td>
-                                  <td className="py-1.5 text-xs">
-                                    {s.isWarmup
-                                      ? detail('warmup')
-                                      : s.isDropSet
-                                        ? detail('dropSet')
-                                        : detail('working')}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                        <EditableStrengthTable
+                          sets={entry.sets.map((s) => ({
+                            id: s.id,
+                            setNumber: s.setNumber,
+                            weight: s.weight,
+                            reps: s.reps,
+                            rir: s.rir,
+                            isWarmup: s.isWarmup,
+                            isDropSet: s.isDropSet,
+                            notes: s.notes,
+                          }))}
+                          usesBodyweight={entry.exercise.usesBodyweight}
+                          bodyweight={bodyweight}
+                          unit={unit}
+                          locale={locale}
+                        />
                       )}
                       {entry.sets.some((s) => s.notes) && (
                         <div className="mt-2 space-y-1 text-xs text-muted-foreground">

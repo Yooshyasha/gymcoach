@@ -29,6 +29,8 @@ export const programs = {
   createError: 'Could not create the program.',
   saveError: 'Could not save the program.',
   deleteError: 'Could not delete the program.',
+  export: 'Export',
+  exportError: 'Could not export the program.',
   activated: 'Program activated.',
   deactivated: 'Program deactivated.',
   activate: 'Activate',

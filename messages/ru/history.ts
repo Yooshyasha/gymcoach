@@ -54,6 +54,7 @@ export const history = {
     heartRateChart: 'Пульс во времени',
     heartRate: 'Пульс',
     chartMinutes: '{value} мин',
+    updateError: 'Не удалось обновить подход.',
   },
   delete: {
     button: 'Удалить',

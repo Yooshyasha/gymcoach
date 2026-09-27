@@ -14,6 +14,12 @@ export const coach = {
     applied: 'Applied',
     debriefFrom: 'Debrief from {date}',
     weekOf: 'Week of {date}',
+    deleteTitle: 'Delete this debrief?',
+    deleteDescription:
+      'This weekly debrief will be permanently deleted. Any adjustment already applied to your program is unaffected.',
+    deleting: 'Deleting...',
+    deleted: 'Debrief deleted.',
+    deleteError: 'Could not delete the debrief.',
   },
   chat: {
     apiKey: 'Set {variable} in .env to enable the chat.',

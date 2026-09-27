@@ -23,6 +23,8 @@ import {
 } from '@/lib/cardio';
 import { MAX_SUPERSET_GROUP, MIN_SUPERSET_GROUP } from '@/lib/supersets';
 import { sorenessSchema } from '@/lib/schemas/readiness';
+import { validateWeightForExercise } from '@/lib/schemas/set';
+import { BACKUP_VERSION } from '@/lib/backup-version';
 import { gymWeightListSchema } from '@/lib/schemas/gym';
 import {
   GYM_EQUIPMENT_IMAGE_MIME_TYPES,
@@ -62,7 +64,9 @@ import {
 // - Program.createdAt / Program.updatedAt and Exercise.createdAt (server-side
 //   bookkeeping with no user-facing meaning; reset to the import time).
 
-const VERSION = 5;
+// See lib/backup-version.ts: shared with the single-program export
+// (app/api/programs/[id]/export), which produces a subset of this same shape.
+const VERSION = BACKUP_VERSION;
 
 // Hard cap on the import body size, enforced while reading the stream (the
 // Content-Length header is attacker-controlled). Generous: a decade of daily
@@ -445,7 +449,11 @@ const importSchema = z.object({
               equipmentNameSnapshot: z.string().max(120).nullable().optional(),
               equipmentLoadSnapshot: z.record(z.string(), z.unknown()).nullable().optional(),
               setNumber: z.number().int().min(1).max(1000),
-              weight: z.number().min(0).max(5000),
+              // Negative weight represents assistance on a bodyweight exercise
+              // (e.g. an assisted pull-up machine); restricted to those
+              // exercises below, since usesBodyweight lives on the exercise
+              // entry, not here.
+              weight: z.number().min(-5000).max(5000),
               reps: z.number().int().min(0).max(1000),
               rir: z.number().int().min(0).max(10).nullable().optional(),
               // v2 cardio fields; absent in v1 backups.
@@ -677,8 +685,11 @@ export async function POST(req: Request) {
           });
         }
 
-        // 3. Recreate the exercises; we keep a name -> id index to link them.
+        // 3. Recreate the exercises; we keep a name -> id index to link them,
+        //    plus a name -> usesBodyweight index (negative set weight, i.e.
+        //    assistance, is only valid on a bodyweight exercise).
         const exerciseIdByName = new Map<string, string>();
+        const usesBodyweightByName = new Map<string, boolean>();
         for (const e of payload.exercises) {
           const created = await tx.exercise.create({
             data: {
@@ -693,6 +704,7 @@ export async function POST(req: Request) {
             },
           });
           exerciseIdByName.set(e.name, created.id);
+          usesBodyweightByName.set(e.name, e.usesBodyweight ?? false);
         }
 
         // 4. Saved gyms are recreated after exercises so per-exercise
@@ -848,6 +860,16 @@ export async function POST(req: Request) {
           const setRows = s.sets.flatMap((set) => {
             const exId = set.exerciseName ? exerciseIdByName.get(set.exerciseName) : undefined;
             if (!exId) return [];
+            const weightError = validateWeightForExercise(
+              usesBodyweightByName.get(set.exerciseName ?? '') ?? false,
+              set.weight,
+            );
+            if (weightError) {
+              throw new ApiError(
+                400,
+                `${weightError} (${set.exerciseName}, set #${set.setNumber})`,
+              );
+            }
             return [
               {
                 sessionId: session.id,

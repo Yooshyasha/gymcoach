@@ -13,7 +13,11 @@ export const setInputSchema = z.object({
   exerciseId: z.string().min(1),
   gymEquipmentId: z.string().min(1).nullable().optional(),
   setNumber: z.coerce.number().int().min(1).max(50),
-  weight: z.coerce.number().min(0).max(500),
+  // Negative weight represents assistance (e.g. an assisted pull-up/dip
+  // machine) on a bodyweight exercise - see effectiveWeight in lib/stats.ts.
+  // The API enforces that restriction with validateWeightForExercise below,
+  // since usesBodyweight lives on the exercise row, not in this payload.
+  weight: z.coerce.number().min(-500).max(500),
   reps: z.coerce.number().int().min(0).max(100),
   rir: z.union([z.coerce.number().int().min(0).max(5), z.null()]).optional().nullable(),
   // Cardio fields (issue #133): only valid on CARDIO exercises - the API
@@ -76,6 +80,20 @@ export function validateSetForCategory(
     data.maxHr != null
   ) {
     return 'Duration, distance and heart rate are only valid on cardio exercises.';
+  }
+  return null;
+}
+
+// Cross-field rule the schema alone cannot express: negative weight (assisted
+// bodyweight movements, e.g. a Gravitron-style assisted pull-up/dip machine)
+// only makes physical sense on an exercise that uses bodyweight. Returns an
+// error message or null when valid.
+export function validateWeightForExercise(
+  usesBodyweight: boolean,
+  weight: number,
+): string | null {
+  if (weight < 0 && !usesBodyweight) {
+    return 'Negative weight (assistance) is only valid on bodyweight exercises.';
   }
   return null;
 }

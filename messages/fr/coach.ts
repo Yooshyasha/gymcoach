@@ -17,6 +17,12 @@ export const coach = {
     applied: 'Appliqué',
     debriefFrom: 'Débrief du {date}',
     weekOf: 'Semaine du {date}',
+    deleteTitle: 'Supprimer ce bilan ?',
+    deleteDescription:
+      'Ce bilan hebdomadaire sera définitivement supprimé. Les ajustements déjà appliqués au programme ne sont pas concernés.',
+    deleting: 'Suppression...',
+    deleted: 'Bilan supprimé.',
+    deleteError: 'Impossible de supprimer le bilan.',
   },
   chat: {
     apiKey: 'Définissez {variable} dans .env pour activer le chat.',

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { extractAdjustments, type Adjustment } from '@/lib/coach-adjustments';
 import { CoachAdjustments } from './coach-adjustments';
+import { DeleteDebriefButton } from './delete-debrief-button';
 
 interface DebriefItem {
   id: string;
@@ -134,6 +135,13 @@ export function CoachClient({
               h.map((item) => (item.id === active.id ? { ...item, appliedAt } : item)),
             );
           }}
+          onDeleted={(id) => {
+            setHistory((h) => {
+              const next = h.filter((item) => item.id !== id);
+              setActiveId((cur) => (cur === id ? (next[0]?.id ?? null) : cur));
+              return next;
+            });
+          }}
         />
       ) : (
         <Card>
@@ -191,10 +199,12 @@ function ActiveDebrief({
   active,
   programDefaults,
   onApplied,
+  onDeleted,
 }: {
   active: DebriefItem;
   programDefaults: Record<string, ProgramExerciseDefaults>;
   onApplied: (appliedAt: string) => void;
+  onDeleted: (id: string) => void;
 }) {
   const t = useTranslations('coach');
   const format = useFormatter();
@@ -214,11 +224,10 @@ function ActiveDebrief({
                 {t('client.weekOf', { date: formatDate(active.weekStart) })}
               </p>
             </div>
-            {active.appliedAt && (
-              <Badge variant="secondary" className="shrink-0">
-                {t('client.applied')}
-              </Badge>
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              {active.appliedAt && <Badge variant="secondary">{t('client.applied')}</Badge>}
+              <DeleteDebriefButton debriefId={active.id} onDeleted={onDeleted} />
+            </div>
           </div>
         </CardHeader>
         <CardContent>

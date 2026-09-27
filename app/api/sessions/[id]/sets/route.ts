@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { Exercise, Set } from '@/lib/prisma-client';
 import { db } from '@/lib/db';
-import { setInputSchema, validateSetForCategory } from '@/lib/schemas/set';
+import {
+  setInputSchema,
+  validateSetForCategory,
+  validateWeightForExercise,
+} from '@/lib/schemas/set';
 import { ApiError, handleApiError, parseJsonBody, requireApiUserId } from '@/lib/api';
 import { setAchievesGoal } from '@/lib/goals';
 import { effectiveWeight } from '@/lib/stats';
@@ -44,6 +48,15 @@ export async function POST(req: Request, props: Params) {
       throw new ApiError(400, categoryError);
     }
     const isCardio = exercise.category === 'CARDIO';
+
+    // Negative weight only makes sense as assistance on a bodyweight exercise
+    // (e.g. an assisted pull-up machine); cardio sets never persist weight.
+    if (!isCardio) {
+      const weightError = validateWeightForExercise(exercise.usesBodyweight, data.weight);
+      if (weightError) {
+        throw new ApiError(400, weightError);
+      }
+    }
 
     const created = await db.$transaction(async (tx) => {
       const canonicalWeight = isCardio ? 0 : data.weight;
