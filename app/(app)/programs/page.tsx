@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTrainingDisplayName } from '@/i18n/training-names';
+import { ProgramImportButton } from '@/components/programs/program-import-button';
 
 export default async function ProgramsPage() {
   const t = await getTranslations('programs');
@@ -31,7 +32,8 @@ export default async function ProgramsPage() {
               {t('count', { count: programs.length })}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <ProgramImportButton />
             <Button asChild variant="outline" className="min-h-tap">
               <Link href="/programs/generate">
                 <Wand2 className="size-4" />

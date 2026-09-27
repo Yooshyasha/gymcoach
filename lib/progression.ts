@@ -56,10 +56,20 @@ export const SORENESS_DELOAD_AT_OR_ABOVE = 5;
 // 10% is a light, evidence-informed deload that protects a fatigued muscle
 // without throwing away the training block.
 export const READINESS_DELOAD_FRACTION = 0.1;
-// The step-down math above relies on weights being >= 0 (the Zod input
-// schemas and both CSV importers clamp them): reducing a negative load by a
-// fraction would shrink assistance and make the set HARDER, not easier
-// (issue #118).
+
+// A single step-down of the working load, easier in both directions (issue
+// #118): for an added load (weight >= 0, the common case) that means less
+// weight (* (1 - fraction)); for assistance on a bodyweight exercise (weight
+// < 0, e.g. an assisted pull-up/dip machine) naively applying the same
+// factor would shrink the assistance and make the set HARDER, not easier -
+// deloading there means MORE assistance, i.e. a more negative number
+// (* (1 + fraction)). A working weight of exactly 0 (bodyweight-only, no
+// added load or assistance) is left unchanged either way - there is no
+// lighter option through this field.
+function deloadStep(workingWeight: number): number {
+  const factor = workingWeight >= 0 ? 1 - READINESS_DELOAD_FRACTION : 1 + READINESS_DELOAD_FRACTION;
+  return +(workingWeight * factor).toFixed(2);
+}
 
 // A recent readiness check-in, shaped for pure progression logic. The caller
 // resolves recency by passing `ageHours` (how old the check-in is), keeping this
@@ -132,7 +142,7 @@ export function suggestNextWeight(
   if (plannedDeload) {
     return constrainSuggestion(
       {
-        weight: +(workingWeight * (1 - READINESS_DELOAD_FRACTION)).toFixed(2),
+        weight: deloadStep(workingWeight),
         reason: 'planned-deload',
         workingWeight,
         targetRepsMax,
@@ -156,7 +166,7 @@ export function suggestNextWeight(
   // Readiness may only hold or reduce. A step-down goes below the working load;
   // a hold keeps the working load (never above it).
   if (recovery === 'deload') {
-    const reduced = +(workingWeight * (1 - READINESS_DELOAD_FRACTION)).toFixed(2);
+    const reduced = deloadStep(workingWeight);
     return constrainSuggestion(
       {
         weight: reduced,

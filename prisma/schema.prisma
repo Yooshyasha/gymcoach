@@ -131,9 +131,13 @@ model Exercise {
   defaultRestSec    Int                    @default(90)
   notes             String?
   // For bodyweight exercises (pull-ups, dips, push-ups...): the effective
-  // tonnage includes User.bodyweight. Set.weight remains the added load (0 by
-  // default, always >= 0 - the input schemas clamp it; negative loads for
-  // assistance machines are deliberately not supported, see issue #118).
+  // tonnage includes User.bodyweight. Set.weight is the added load, 0 by
+  // default - positive for extra load, negative for assistance on a machine
+  // (e.g. an assisted pull-up/dip machine). Negative weight is rejected by
+  // the input schemas on every other exercise (validateWeightForExercise in
+  // lib/schemas/set.ts). Formerly documented as unsupported (issue #118);
+  // lib/progression.ts's deload/auto-regulation math now accounts for the
+  // sign so a step-down adds assistance instead of removing it.
   usesBodyweight    Boolean                @default(false)
   // Determines which saved-gym inventory constrains suggested loads.
   equipmentType     EquipmentType          @default(OTHER)

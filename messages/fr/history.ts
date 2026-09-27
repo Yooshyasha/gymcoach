@@ -54,6 +54,10 @@ export const history = {
     heartRate: 'FC',
     chartMinutes: '{value} min',
     updateError: 'Impossible de mettre à jour la série.',
+    addExercise: 'Ajouter un exercice',
+    addExerciseChoose: 'Choisir un exercice',
+    addExerciseDone: 'Exercice ajouté.',
+    addExerciseError: 'Impossible d’ajouter l’exercice.',
   },
   delete: {
     button: 'Supprimer',

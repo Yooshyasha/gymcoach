@@ -31,6 +31,14 @@ export const programs = {
   deleteError: 'Could not delete the program.',
   export: 'Export',
   exportError: 'Could not export the program.',
+  import: {
+    action: 'Import',
+    invalidJson: 'That file is not valid JSON.',
+    error: 'Could not import the program.',
+    done: '{count, plural, one {Imported {name}.} other {Imported # programs.}}',
+    skipped:
+      '{count, plural, one {# programmed exercise skipped (not found in the file or your catalog).} other {# programmed exercises skipped (not found in the file or your catalog).}}',
+  },
   activated: 'Program activated.',
   deactivated: 'Program deactivated.',
   activate: 'Activate',

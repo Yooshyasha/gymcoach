@@ -20,6 +20,7 @@ import {
 import { formatWeight } from '@/lib/units';
 import { DeleteSessionButton } from '@/components/history/delete-session-button';
 import { EditableStrengthTable } from '@/components/history/editable-strength-table';
+import { AddExerciseToSession } from '@/components/history/add-exercise-to-session';
 import { ActivityTrackChart } from '@/components/history/activity-track-chart';
 import { TrackDecoupling } from '@/components/history/track-decoupling';
 import { getExerciseDisplayName } from '@/i18n/exercise-names';
@@ -55,7 +56,7 @@ export default async function HistorySessionPage(props: Params) {
   const timeZone = resolveCalendarTimeZone(searchParams.tz, await getTimeZone());
   const auth = await requireSession();
 
-  const [session, user] = await Promise.all([
+  const [session, user, strengthCatalog] = await Promise.all([
     db.session.findUnique({
       where: { id: params.id },
       include: {
@@ -80,6 +81,13 @@ export default async function HistorySessionPage(props: Params) {
     db.user.findUnique({
       where: { id: auth.userId },
       select: { bodyweight: true, unit: true },
+    }),
+    // For the "add exercise" form below: cardio needs a different set shape
+    // (duration/distance) this quick-add form does not cover.
+    db.exercise.findMany({
+      where: { userId: auth.userId, category: { not: 'CARDIO' } },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
     }),
   ]);
 
@@ -384,6 +392,8 @@ export default async function HistorySessionPage(props: Params) {
             })}
           </ul>
         )}
+
+        <AddExerciseToSession sessionId={session.id} catalog={strengthCatalog} unit={unit} />
       </div>
     </main>
   );

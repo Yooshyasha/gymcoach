@@ -35,6 +35,14 @@ export const programs = {
   deleteError: 'Impossible de supprimer le programme.',
   export: 'Exporter',
   exportError: 'Impossible d’exporter le programme.',
+  import: {
+    action: 'Importer',
+    invalidJson: 'Ce fichier n’est pas un JSON valide.',
+    error: 'Impossible d’importer le programme.',
+    done: '{count, plural, one {{name} importé.} other {# programmes importés.}}',
+    skipped:
+      '{count, plural, one {# exercice programmé ignoré (introuvable dans le fichier ou votre catalogue).} other {# exercices programmés ignorés (introuvables dans le fichier ou votre catalogue).}}',
+  },
   activated: 'Programme activé.',
   deactivated: 'Programme désactivé.',
   activate: 'Activer',

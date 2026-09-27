@@ -380,3 +380,53 @@ describe('suggestNextWeight planned deload', () => {
     expect(res).toEqual({ weight: null, reason: 'no-history' });
   });
 });
+
+// Negative weight = assistance on a bodyweight exercise (e.g. an assisted
+// pull-up/dip machine), issue #118: a deload must make the set EASIER, which
+// for assistance means MORE negative (more assistance), not closer to zero.
+// Naively applying the positive-load formula in the other direction would
+// shrink the assistance and make the set harder - the opposite of a deload.
+describe('suggestNextWeight deload direction on assisted (negative-weight) sets', () => {
+  const assistedExo: Exercise = {
+    ...compoundExo,
+    id: 'e3',
+    name: 'Assisted pull-up',
+    usesBodyweight: true,
+  };
+  const assistedSets = [
+    { weight: -64, reps: 8, rir: 1 },
+    { weight: -64, reps: 8, rir: 1 },
+    { weight: -64, reps: 8, rir: 1 },
+  ];
+
+  it('planned deload moves further from zero (more assistance), not toward it', () => {
+    const res = suggestNextWeight(makePe(assistedExo), assistedSets, null, true);
+    expect(res.reason).toBe('planned-deload');
+    expect(res.weight).toBe(+(-64 * (1 + READINESS_DELOAD_FRACTION)).toFixed(2));
+    expect(res.weight as number).toBeLessThan(-64);
+  });
+
+  it('readiness deload (very poor recovery) does the same', () => {
+    const drained: ReadinessSignal = { readiness: 1, soreness: null, ageHours: 1 };
+    const res = suggestNextWeight(makePe(assistedExo), assistedSets, drained);
+    expect(res.reason).toBe('readiness-deload');
+    expect(res.weight).toBe(+(-64 * (1 + READINESS_DELOAD_FRACTION)).toFixed(2));
+    expect(res.weight as number).toBeLessThan(-64);
+  });
+
+  it('never raises the suggestion (weight stays numerically <= progression baseline)', () => {
+    const baseline = suggestNextWeight(makePe(assistedExo), assistedSets).weight as number;
+    const drained: ReadinessSignal = { readiness: 1, soreness: null, ageHours: 1 };
+    const res = suggestNextWeight(makePe(assistedExo), assistedSets, drained);
+    expect(res.weight as number).toBeLessThanOrEqual(baseline);
+  });
+
+  it('leaves a true zero (bodyweight only, no assistance or added load) unchanged', () => {
+    const zeroSets = [
+      { weight: 0, reps: 8, rir: 1 },
+      { weight: 0, reps: 8, rir: 1 },
+    ];
+    const res = suggestNextWeight(makePe(assistedExo), zeroSets, null, true);
+    expect(res.weight).toBe(0);
+  });
+});

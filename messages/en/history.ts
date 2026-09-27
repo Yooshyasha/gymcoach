@@ -51,6 +51,10 @@ export const history = {
     heartRate: 'HR',
     chartMinutes: '{value} min',
     updateError: 'Could not update the set.',
+    addExercise: 'Add exercise',
+    addExerciseChoose: 'Choose an exercise',
+    addExerciseDone: 'Exercise added.',
+    addExerciseError: 'Could not add the exercise.',
   },
   delete: {
     button: 'Delete',

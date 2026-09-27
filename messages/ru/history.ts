@@ -55,6 +55,10 @@ export const history = {
     heartRate: 'Пульс',
     chartMinutes: '{value} мин',
     updateError: 'Не удалось обновить подход.',
+    addExercise: 'Добавить упражнение',
+    addExerciseChoose: 'Выберите упражнение',
+    addExerciseDone: 'Упражнение добавлено.',
+    addExerciseError: 'Не удалось добавить упражнение.',
   },
   delete: {
     button: 'Удалить',

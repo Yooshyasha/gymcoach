@@ -27,9 +27,9 @@ export async function POST(req: Request, props: Params) {
     if (!session) {
       throw new ApiError(404, 'Session not found.');
     }
-    if (session.finishedAt) {
-      throw new ApiError(400, 'Session already finished.');
-    }
+    // A finished session still accepts new sets (e.g. logging an exercise
+    // forgotten in the moment), matching PATCH/DELETE on /api/sets/[id],
+    // which never gated on finishedAt either.
 
     const data = await parseJsonBody(req, setInputSchema);
 
